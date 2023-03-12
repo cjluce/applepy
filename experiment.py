@@ -166,6 +166,39 @@ def on_key_press(symbol, modifiers):
     if symbol == key.A:
         event = go_left
         print("Pressed: A")
+    if symbol == key.Q:
+        print("Pressed: Q")
+        print("ENDING GAME")
+        raise Exception("QUIT GAME")
+
+
+def collide_wall():
+    """."""
+    head = snake[0]
+    direction = (0 if dx == 0 else dx // abs(dx),
+                 0 if dy == 0 else dy // abs(dy))
+    tip = (head.x + direction[0] * 20,
+           head.y + direction[1] * 20)
+    if tip[0] < 0 or tip[0] > window.width:
+        return True
+    if tip[1] < 0 or tip[1] > window.height:
+        return True
+    return False
+
+
+def collide_self():
+    """."""
+    head = snake[0]
+    direction = (0 if dx == 0 else dx // abs(dx),
+                 0 if dy == 0 else dy // abs(dy))
+    tip = (head.x + direction[0] * 20,
+           head.y + direction[1] * 20)
+    # if ds[0] == [0, 0]:
+    #     return True
+    for ipiece in range(1, len(snake)):
+        if point_in_square(tip, (snake[ipiece].x, snake[ipiece].y)):
+            return True
+    return False
 
 __iframe = 0
 
@@ -179,7 +212,13 @@ def draw_snake():
     global __iframe
     if is_vertex(snake[0].x, snake[0].y):
         if event is not None:
+            print(tuple(-1 * i for i in event()), event())
             intersection_to_event[(snake[0].x, snake[0].y)] = event()
+        # TODO: I can cause my index error crash by eating the apple
+        # with a perpendicular movement to the snake. So if the snake
+        # is adjacent to the apple, but not in the direction of the
+        # velocity of the head, then I cause a change in velocity,
+        # this appears to be when the apple get's an incorrect index.
         for ipiece in range(len(snake)):
             ev = intersection_to_event[
                 (snake[ipiece].x, snake[ipiece].y)
@@ -225,7 +264,12 @@ def on_draw():
     global __iframe
     global apples
     draw_snake()
-    direction = 0 if dx == 0 else dx / abs(dx), 0 if dy == 0 else dy / abs(dy)
+    if collide_wall():
+        raise Exception("YOU DIED: COLLISION WITH WALL")
+    if collide_self():
+        raise Exception("YOU DIED: COLLISION WITH SELF")
+    direction = (0 if dx == 0 else dx // abs(dx),
+                 0 if dy == 0 else dy // abs(dy))
     head = snake[0]
     tip = head.x + direction[0] * 20, head.y + direction[1] * 20
     apple = apples[0]
@@ -233,8 +277,17 @@ def on_draw():
         snake.insert(
             0,
             pyglet.shapes.Circle(
-                x=apple.x,
-                y=apple.y,
+                # I set the new head's position like this, instead of
+                # using the apples coordinates since I think my tip
+                # detection is a little off. Specifically, if I was
+                # adjacent to the apple, with my velocity not pointing
+                # towards the apple, and I make a 90 degree rotation
+                # to eat the apple, the game would crash because my
+                # new head's index was off by two.
+                x=head.x + direction[0] * 40,
+                y=head.y + direction[1] * 40,
+                # x=apple.x,
+                # y=apple.y,
                 radius=20,
                 batch=snakebatch
             )
