@@ -7,7 +7,9 @@ from collections import deque
 from random import sample
 
 
-window = pyglet.window.Window(600, 400)
+nrow, ncol = 5, 5
+
+window = pyglet.window.Window(ncol * 40, nrow * 40)
 # print(f"WINDOW: {window.height}")
 
 # Create the visual rail guides
@@ -54,9 +56,30 @@ for w in range(0, window.width, 40):
 applebatch = pyglet.graphics.Batch()
 apples = []
 
+
+# TODO: This isn't very well optimized, and it might not work... I'm
+# only checking whether the center is in the list... which might be
+# okay since that is when I will be generating apples anyways? Might
+# be some edge cases. In addition, the linear lookup might just be
+# dumb. EDIT: I just tested the game with a small board. there are
+# definitely instances where I spawn an apple into my snake. will need
+# to look into that. It appears to be the same exact case that I ran
+# into with being adjacent to the apple, with my velocity facing away
+# from the apple, and then turning at a 90 degree angle to grab the
+# apple in the next frame. that seems to be the instance where this
+# fails because my edge detection is wrong there.
 def put_random_apple():
+    """."""
+    intersections_cp = intersections.copy()
+    print(len(intersections_cp), len(intersections))
+    for ipiece in range(len(snake)):
+        piece = snake[ipiece]
+        if (piece.x, piece.y) in intersections_cp:
+            intersections_cp.remove(
+                (piece.x, piece.y)
+            )
     random_intersection = sample(
-        intersections,
+        intersections_cp,
         1
     )[0]
     apples.append(
@@ -99,7 +122,7 @@ xstart = 20
 #     ds.insert(0, [0, 0])
 #     xstart += 40
 
-for i in range(10):
+for i in range(1):
     snake.insert(0,
                  pyglet.shapes.Circle(
                      x=xstart,
@@ -212,7 +235,6 @@ def draw_snake():
     global __iframe
     if is_vertex(snake[0].x, snake[0].y):
         if event is not None:
-            print(tuple(-1 * i for i in event()), event())
             intersection_to_event[(snake[0].x, snake[0].y)] = event()
         # TODO: I can cause my index error crash by eating the apple
         # with a perpendicular movement to the snake. So if the snake
@@ -301,8 +323,8 @@ def on_draw():
     applebatch.draw()
     # railsbatch.draw()
 
-    if __iframe % 60 == 0:
-        print(ds)
+    # if __iframe % 60 == 0:
+    #     print(ds)
 
     __iframe += 1
 
