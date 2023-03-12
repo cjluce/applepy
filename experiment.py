@@ -27,9 +27,11 @@ for w in range(20, window.width, 40):
     )
 
 intersection_to_event = {}
+intersections = []
 for h in range(20, window.height, 40):
     for w in range(20, window.width, 40):
         intersection_to_event[(w, h)] = None
+        intersections.append((w, h))
 
 
 # Create the visual board guides
@@ -46,6 +48,25 @@ for w in range(0, window.width, 40):
         pyglet.shapes.Line(x=w, x2=w,
                            y=0, y2=window.height,
                            batch=boardbatch)
+    )
+
+
+applebatch = pyglet.graphics.Batch()
+apples = []
+
+def put_random_apple():
+    random_intersection = sample(
+        intersections,
+        1
+    )[0]
+    apples.append(
+        pyglet.shapes.Circle(
+            x=random_intersection[0],
+            y=random_intersection[1],
+            radius=20,
+            color=(255, 0, 0),
+            batch=applebatch
+        )
     )
 
 
@@ -149,10 +170,7 @@ def on_key_press(symbol, modifiers):
 __iframe = 0
 
 
-@window.event
-def on_draw():
-    """."""
-    window.clear()
+def draw_snake():
     global dx
     global dy
     global ds
@@ -182,13 +200,59 @@ def on_draw():
     for ipiece in range(len(snake)):
         snake[ipiece].x += ds[ipiece][0]
         snake[ipiece].y += ds[ipiece][1]
+
+
+def point_in_square(point, squarecenter):
+    if (
+            point[0] <= squarecenter[0] + 20 and
+            point[0] >= squarecenter[0] - 20 and
+            point[1] <= squarecenter[1] + 20 and
+            point[1] >= squarecenter[1] - 20
+    ):
+        return True
+    return False
+
+
+@window.event
+def on_draw():
+    """."""
+    window.clear()
+    global dx
+    global dy
+    global ds
+    global snake
+    global event
+    global __iframe
+    global apples
+    draw_snake()
+    direction = 0 if dx == 0 else dx / abs(dx), 0 if dy == 0 else dy / abs(dy)
+    head = snake[0]
+    tip = head.x + direction[0] * 20, head.y + direction[1] * 20
+    apple = apples[0]
+    if point_in_square(tip, (apple.x, apple.y)):
+        snake.insert(
+            0,
+            pyglet.shapes.Circle(
+                x=apple.x,
+                y=apple.y,
+                radius=20,
+                batch=snakebatch
+            )
+        )
+        ds.insert(0, ds[0])
+        apple.delete()
+        apples = []
+        put_random_apple()
     snakebatch.draw()
     boardbatch.draw()
+    applebatch.draw()
     # railsbatch.draw()
 
     if __iframe % 60 == 0:
         print(ds)
 
     __iframe += 1
+
+put_random_apple()
 
 pyglet.app.run()
