@@ -7,7 +7,8 @@ from collections import deque
 from random import sample
 
 
-nrow, ncol = 5, 5
+ngrid = 15
+nrow, ncol = ngrid, ngrid
 
 window = pyglet.window.Window(ncol * 40, nrow * 40)
 # print(f"WINDOW: {window.height}")
@@ -168,6 +169,7 @@ def go_down():
 
 
 event = None
+show_grid_lines = True
 
 
 @window.event
@@ -177,6 +179,7 @@ def on_key_press(symbol, modifiers):
     global dy
     global rotation
     global event
+    global show_grid_lines
     if symbol == key.W:
         event = go_up
         print("Pressed: W")
@@ -189,6 +192,10 @@ def on_key_press(symbol, modifiers):
     if symbol == key.A:
         event = go_left
         print("Pressed: A")
+    if symbol == key.G:
+        show_grid_lines = not show_grid_lines
+        print("Pressed: G")
+        print("Toggle Grid Lines")
     if symbol == key.Q:
         print("Pressed: Q")
         print("ENDING GAME")
@@ -285,6 +292,7 @@ def on_draw():
     global event
     global __iframe
     global apples
+    global show_grid_lines
     draw_snake()
     if collide_wall():
         raise Exception("YOU DIED: COLLISION WITH WALL")
@@ -319,7 +327,8 @@ def on_draw():
         apples = []
         put_random_apple()
     snakebatch.draw()
-    boardbatch.draw()
+    if show_grid_lines:
+        boardbatch.draw()
     applebatch.draw()
     # railsbatch.draw()
 
