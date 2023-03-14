@@ -1,2 +1,2 @@
 # pyapple
-Snake implemtation in Python using the Pyglet library.
+Snake implementation in Python using the Pyglet library.
